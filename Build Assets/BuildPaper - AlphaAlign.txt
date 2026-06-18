@@ -1,0 +1,1200 @@
+# Build Paper
+
+# Strategic AI Choice Engine - AlphaAlign
+
+## A standalone decision-support application for AI architecture positioning, AHP scoring, leadership alignment, and strategic recommendation
+
+---
+
+## 1. Executive Summary
+
+The **Strategic AI Choice Engine** is a standalone decision-support application that helps companies decide where they should position themselves on the AI architecture spectrum:
+
+1. **Strong Vendor Commitment**
+2. **Hybrid AI Operating Model**
+3. **Independent AI Control Model**
+
+The system uses structured leadership input, AHP pairwise comparison, scoring logic, optional strategic override parameters, and optional LLM-based analysis to generate a clear recommendation.
+
+The purpose is not to tell companies that independence is always best. The purpose is to help them make an intentional strategic choice.
+
+The tool answers the question:
+
+> Given our business priorities, risks, systems, AI ambition, governance requirements, and internal capabilities, should we commit strongly to a vendor ecosystem, operate a hybrid model, or build toward independent AI control?
+
+The application is designed for consultants, CIOs, strategy teams, transformation leaders, AI governance teams, and executive leadership groups.
+
+---
+
+## 2. Product Vision
+
+Most companies are currently making AI architecture decisions based on existing vendor relationships, short-term convenience, internal politics, or assumptions about what Microsoft, SAP, Google, AWS, OpenAI, Anthropic, or other vendors will provide.
+
+This creates a strategic risk.
+
+The Strategic AI Choice Engine gives leadership teams a structured method for deciding the right architecture posture.
+
+It combines:
+
+* Leadership survey input
+* AHP pairwise comparison
+* Criteria weighting
+* Architecture option scoring
+* Leadership alignment analysis
+* Strategic importance override
+* Optional local or API-based LLM interpretation
+* Exportable executive reports
+
+The application should feel like a professional advisory tool rather than a technical scoring spreadsheet.
+
+---
+
+## 3. Core Decision Model
+
+The application evaluates the company against three generalized strategic outcomes.
+
+### 3.1 Outcome 1: Strong Vendor Commitment
+
+The company deliberately commits to a primary vendor ecosystem as the main AI platform and control layer.
+
+This could be Microsoft, SAP, Google, AWS, Salesforce, ServiceNow, or another strategic vendor.
+
+This outcome is suitable when:
+
+* The company wants speed and simplicity.
+* Most workflows already live inside one vendor ecosystem.
+* AI is mainly used for productivity and standard automation.
+* Vendor lock-in is acceptable.
+* Governance can be handled inside the vendor stack.
+* The organization lacks the capability or appetite to run independent orchestration.
+
+Strategic meaning:
+
+> We choose to standardize around a strong vendor ecosystem because speed, integration, simplicity, and operational manageability matter more than architectural independence.
+
+---
+
+### 3.2 Outcome 2: Hybrid AI Operating Model
+
+The company uses major vendor platforms where they are strong, but introduces an independent orchestration, governance, or control layer for strategic AI use cases.
+
+This outcome is suitable when:
+
+* The company needs both vendor productivity tools and cross-system AI workflows.
+* AI must interact with multiple systems such as ERP, CRM, SAP, Microsoft 365, data platforms, web tools, and legacy systems.
+* The company wants model flexibility without fully building its own AI platform.
+* Some AI use cases are business-critical.
+* Governance and control must sit above individual vendor solutions.
+* The company wants a pragmatic bridge between vendor commitment and independence.
+
+Strategic meaning:
+
+> We use vendors where they create value, but we control the architecture where AI becomes strategic.
+
+---
+
+### 3.3 Outcome 3: Independent AI Control Model
+
+The company builds or adopts a business-controlled AI orchestration layer where vendors, models, tools, agents, and systems become interchangeable components.
+
+This outcome is suitable when:
+
+* AI is becoming business-critical.
+* The company wants strong architectural independence.
+* Vendor lock-in is a significant strategic concern.
+* AI agents need to operate across many systems.
+* The company needs model-agnostic execution.
+* Sensitive data, proprietary processes, or regulated workflows are involved.
+* The company has the capability, funding, and governance maturity to operate a more independent model.
+
+Strategic meaning:
+
+> We control the AI operating layer ourselves and treat vendors, models, and tools as replaceable capabilities.
+
+---
+
+## 4. Recommended Technology Stack
+
+The recommended stack is:
+
+| Layer              | Technology                     | Purpose                                           |
+| ------------------ | ------------------------------ | ------------------------------------------------- |
+| Frontend           | React                          | User interface, dashboards, surveys, charts       |
+| Backend            | FastAPI                        | API layer, calculation services, file handling    |
+| Calculation Engine | Python                         | AHP, scoring, Excel processing, analytics         |
+| Local Database     | SQLite                         | Projects, criteria, respondents, scores, settings |
+| Excel Processing   | openpyxl / pandas              | Import and export of survey templates             |
+| Charts             | Recharts / Plotly              | Visual leadership alignment and scoring output    |
+| Local Packaging    | PyInstaller / Tauri / Electron | Standalone local application                      |
+| Optional LLM       | Local or API                   | Strategic interpretation and recommendation text  |
+
+The recommended MVP should be built as a **local web application** first:
+
+* User launches the application.
+* Backend starts locally.
+* Browser opens the React GUI on localhost.
+* All data is stored locally.
+* No cloud dependency is required.
+
+Later, it can be packaged as a full desktop application using Tauri or Electron.
+
+---
+
+## 5. Core User Flow
+
+### Step 1: Create Assessment Project
+
+The user creates a new assessment project.
+
+Required fields:
+
+* Company name
+* Assessment name
+* Industry
+* Assessment owner
+* Date
+* Strategic time horizon
+* Current primary vendor ecosystem
+* Key systems in scope
+* AI ambition level
+* Optional notes
+
+Example project:
+
+> “AI Architecture Strategic Choice Assessment – Manufacturing Division – 2026”
+
+---
+
+### Step 2: Select or Define Criteria
+
+The user can choose the default criteria or create custom criteria.
+
+Default criteria:
+
+1. Business Criticality
+2. Agentic Ambition
+3. System Complexity
+4. Vendor Dependency Risk
+5. Governance and Compliance Need
+6. Data and IP Sensitivity
+7. Model Flexibility Requirement
+8. Cost Control Pressure
+9. Internal Capability Readiness
+10. Speed to Implementation
+
+The user can:
+
+* Add criteria
+* Remove criteria
+* Rename criteria
+* Change descriptions
+* Group criteria into categories
+* Mark criteria as mandatory
+* Save custom criteria templates
+
+This makes the tool usable across industries.
+
+---
+
+### Step 3: Generate Leadership Survey Template
+
+The system generates an Excel survey template for leadership respondents.
+
+Each survey file includes:
+
+1. Instructions
+2. Respondent profile
+3. Criteria pairwise comparison
+4. Alternative scoring
+5. Strategic Importance appendix
+6. Free-text comments
+7. Metadata tab
+
+The company can send this Excel file to:
+
+* CEO
+* CFO
+* CIO
+* CTO
+* CISO
+* COO
+* CHRO
+* Business unit leaders
+* Data and AI leaders
+* Transformation leaders
+* Enterprise architects
+
+Each leader completes the survey independently.
+
+---
+
+### Step 4: Upload Completed Survey Files
+
+The user uploads one or more completed Excel files.
+
+The system validates:
+
+* Required fields completed
+* Criteria match project setup
+* Pairwise values are valid
+* Respondent role exists
+* No duplicate respondent IDs
+* No missing comparison values
+* Strategic Importance values are within allowed range
+* Comments are imported correctly
+
+Invalid files are rejected with clear feedback.
+
+Example validation message:
+
+> The file from Respondent 04 is missing three pairwise comparisons under “Governance and Compliance Need”. Please correct and re-upload.
+
+---
+
+### Step 5: AHP Calculation
+
+The system calculates the relative importance of criteria using AHP.
+
+For each respondent, the system builds a pairwise comparison matrix.
+
+Example:
+
+| Criteria             | Business Criticality | Governance | Cost Control |
+| -------------------- | -------------------: | ---------: | -----------: |
+| Business Criticality |                    1 |          3 |            5 |
+| Governance           |                  1/3 |          1 |            3 |
+| Cost Control         |                  1/5 |        1/3 |            1 |
+
+The system calculates:
+
+* Criteria weights
+* Consistency index
+* Consistency ratio
+* Respondent-level reliability
+* Group-level aggregated weighting
+
+The preferred calculation method is the **geometric mean method**, which is robust and understandable.
+
+The app should also support eigenvector-based AHP later if needed.
+
+---
+
+### Step 6: Consistency Check
+
+AHP requires a consistency check.
+
+The application should calculate the consistency ratio for each respondent.
+
+Suggested interpretation:
+
+| Consistency Ratio | Interpretation                         |
+| ----------------: | -------------------------------------- |
+|         0.00–0.10 | Good consistency                       |
+|         0.11–0.20 | Acceptable but should be reviewed      |
+|             0.21+ | Inconsistent input; review recommended |
+
+The system should not automatically reject inconsistent input unless the user enables strict mode.
+
+Instead, it should flag the issue.
+
+Example output:
+
+> The CFO’s responses show high inconsistency in the comparison between cost control, vendor dependency, and governance. Review is recommended before finalizing the result.
+
+---
+
+## 6. Leadership Aggregation
+
+The system aggregates leadership responses using geometric mean aggregation.
+
+Default setting:
+
+* Each respondent has equal weight.
+
+Optional setting:
+
+* Role-based weighting.
+
+Example role weighting:
+
+| Role                 | Weight |
+| -------------------- | -----: |
+| CEO                  |    1.5 |
+| CFO                  |    1.2 |
+| CIO / CTO            |    1.5 |
+| CISO                 |    1.3 |
+| COO                  |    1.2 |
+| Business Unit Leader |    1.0 |
+| HR / People          |    0.8 |
+
+The user should be able to choose:
+
+1. Equal leadership weighting
+2. Role-based weighting
+3. Custom respondent weighting
+
+The report must clearly state which aggregation method was used.
+
+---
+
+## 7. Alternative Scoring
+
+The system evaluates the three architecture outcomes:
+
+1. Strong Vendor Commitment
+2. Hybrid AI Operating Model
+3. Independent AI Control Model
+
+There should be two scoring modes.
+
+---
+
+### 7.1 Simple Mode
+
+The user scores each architecture outcome against each criterion from 1 to 5.
+
+Example:
+
+| Criterion              | Strong Vendor Commitment | Hybrid | Independent |
+| ---------------------- | -----------------------: | -----: | ----------: |
+| Business Criticality   |                        3 |      4 |           5 |
+| Agentic Ambition       |                        2 |      4 |           5 |
+| System Complexity      |                        2 |      5 |           4 |
+| Vendor Dependency Risk |                        1 |      4 |           5 |
+| Governance Need        |                        3 |      4 |           5 |
+| Internal Readiness     |                        5 |      3 |           2 |
+
+The system then applies the AHP criteria weights.
+
+---
+
+### 7.2 Full AHP Mode
+
+The user compares the three architecture outcomes pairwise under each criterion.
+
+Example:
+
+Under “Vendor Dependency Risk”:
+
+| Pair                                    | Selection                              |
+| --------------------------------------- | -------------------------------------- |
+| Hybrid vs Strong Vendor Commitment      | Hybrid is strongly preferred           |
+| Independent vs Hybrid                   | Independent is moderately preferred    |
+| Independent vs Strong Vendor Commitment | Independent is very strongly preferred |
+
+This is more rigorous but takes longer.
+
+The MVP should include **Simple Mode** first.
+
+Full AHP Mode can be added later.
+
+---
+
+## 8. Strategic Importance Appendix
+
+This is an important addition.
+
+The application must include a **Strategic Importance parameter** that allows a company to explicitly override or boost a project, initiative, or architecture recommendation when leadership considers it strategically important.
+
+This should be implemented transparently as an official strategic override, not as a hidden manipulation of the AHP result.
+
+The purpose is to give the company a legitimate “executive judgement” mechanism.
+
+Some initiatives are strategically important even if they do not score perfectly on normal criteria.
+
+Examples:
+
+* A politically important board initiative
+* A regulatory deadline
+* A strategic customer requirement
+* A defensive move against vendor lock-in
+* A critical capability for future AI maturity
+* A CEO-sponsored transformation priority
+* A national, regional, or sovereignty requirement
+* A capability needed for long-term competitive advantage
+
+---
+
+### 8.1 Strategic Importance Scale
+
+The Strategic Importance parameter should use a 0–10 scale.
+
+| Score | Meaning                       |
+| ----: | ----------------------------- |
+|     0 | No strategic override         |
+|   1–3 | Low strategic importance      |
+|   4–6 | Moderate strategic importance |
+|   7–8 | High strategic importance     |
+|     9 | Executive strategic priority  |
+|    10 | Critical strategic imperative |
+
+---
+
+### 8.2 Strategic Importance Scoring Logic
+
+The Strategic Importance value should be able to materially affect the final score.
+
+The system should calculate two scores:
+
+1. **Base AHP Score**
+2. **Final Strategic Score**
+
+The Base AHP Score is the pure calculated result.
+
+The Final Strategic Score includes the Strategic Importance adjustment.
+
+Recommended formula:
+
+```text
+Final Strategic Score = max(Base AHP Score + Strategic Boost, Strategic Importance Floor)
+```
+
+Where:
+
+| Strategic Importance | Strategic Boost | Strategic Importance Floor |
+| -------------------: | --------------: | -------------------------: |
+|                    0 |              +0 |                   No floor |
+|                    1 |              +2 |                   No floor |
+|                    2 |              +4 |                   No floor |
+|                    3 |              +6 |                   No floor |
+|                    4 |              +8 |                         50 |
+|                    5 |             +10 |                         60 |
+|                    6 |             +12 |                         70 |
+|                    7 |             +15 |                         80 |
+|                    8 |             +20 |                         85 |
+|                    9 |             +25 |                         90 |
+|                   10 |             +30 |                         95 |
+
+The final score must be capped at 100.
+
+Example:
+
+| Project                         | Base AHP Score | Strategic Importance | Final Strategic Score |
+| ------------------------------- | -------------: | -------------------: | --------------------: |
+| AI vendor consolidation         |             62 |                    4 |                    70 |
+| Independent orchestration pilot |             58 |                    9 |                    90 |
+| Office productivity rollout     |             75 |                    2 |                    79 |
+| Regulatory AI governance layer  |             64 |                   10 |                    95 |
+
+This ensures that if leadership explicitly marks something as highly strategic, it can receive a high final score.
+
+---
+
+### 8.3 Transparency Rule
+
+The report must clearly show when a final score was lifted by Strategic Importance.
+
+Example:
+
+> The Independent Orchestration Pilot received a Base AHP Score of 58. However, leadership assigned a Strategic Importance value of 9, classifying it as an Executive Strategic Priority. The Final Strategic Score was therefore lifted to 90.
+
+This is important because the tool should not pretend the score came only from the normal criteria.
+
+It should show both:
+
+* Analytical score
+* Strategic override score
+
+That makes the “loophole” acceptable in a leadership context.
+
+---
+
+### 8.4 Strategic Importance Justification
+
+If the user sets Strategic Importance to 7 or higher, the system should require a justification.
+
+Required fields:
+
+* Strategic reason
+* Executive sponsor
+* Time horizon
+* Risk of not acting
+* Business consequence
+* Review date
+
+Example justification:
+
+> This initiative is strategically important because it gives the company a controlled AI orchestration layer for SAP-connected workflows and prevents over-dependence on one vendor ecosystem.
+
+This justification should appear in the appendix of the final report.
+
+---
+
+## 9. Final Recommendation Logic
+
+The application should not only rank the three outcomes. It should interpret the result.
+
+The recommendation engine should consider:
+
+* Highest scoring outcome
+* Score gap between outcomes
+* Internal readiness score
+* Strategic Importance override
+* Leadership alignment
+* Consistency quality
+* Risk profile
+* Current vendor dependency
+* AI ambition level
+
+---
+
+### 9.1 Outcome Recommendation
+
+Example scoring:
+
+| Outcome                      | Score |
+| ---------------------------- | ----: |
+| Strong Vendor Commitment     |    63 |
+| Hybrid AI Operating Model    |    86 |
+| Independent AI Control Model |    82 |
+
+Recommendation:
+
+> Recommended position: Hybrid AI Operating Model
+
+Interpretation:
+
+> The company should use strong vendor platforms where they create speed and productivity, but introduce an independent orchestration and governance layer for strategic, cross-system, agentic, or business-critical AI use cases.
+
+---
+
+### 9.2 Target-State and Next-Step Logic
+
+The system should distinguish between:
+
+1. **Recommended next step**
+2. **Long-term target state**
+
+Example:
+
+| Category              | Result                                                                                     |
+| --------------------- | ------------------------------------------------------------------------------------------ |
+| Recommended next step | Hybrid AI Operating Model                                                                  |
+| Long-term target      | Independent AI Control Model                                                               |
+| Reason                | Independent scores highest strategically, but internal readiness is not yet strong enough. |
+
+This is important because the correct strategic answer may not be the correct implementation step.
+
+---
+
+## 10. Leadership Alignment Analysis
+
+The application should analyze whether the leadership team is aligned or divided.
+
+The system should calculate variation across respondents for each criterion.
+
+Example output:
+
+| Criterion                 | Alignment Level  |
+| ------------------------- | ---------------- |
+| Governance and Compliance | Strong alignment |
+| Vendor Dependency Risk    | Strong alignment |
+| Agentic Ambition          | Mixed alignment  |
+| Cost Control              | Low alignment    |
+| Internal Readiness        | Mixed alignment  |
+
+The application should identify:
+
+* Areas of strong agreement
+* Areas of disagreement
+* Outlier respondents
+* Role-based differences
+* Criteria with high strategic tension
+
+Example interpretation:
+
+> The leadership team is aligned on the need for governance and vendor risk management, but misaligned on cost control and agentic ambition. This suggests that the company should resolve expectations around AI scale, autonomy, and investment appetite before committing to a final architecture model.
+
+This is one of the most valuable parts of the tool.
+
+It turns the assessment into a boardroom conversation.
+
+---
+
+## 11. LLM-Based Strategic Analysis
+
+The LLM should never calculate the score.
+
+The scoring engine must remain deterministic.
+
+The LLM should only interpret the result.
+
+Supported LLM modes:
+
+1. No LLM
+2. Local LLM
+3. API LLM
+4. Custom OpenAI-compatible endpoint
+
+Supported provider examples:
+
+* OpenAI API
+* Azure OpenAI
+* Anthropic
+* Google
+* Mistral
+* Ollama
+* LM Studio
+* Local OpenAI-compatible endpoint
+
+The user should be able to choose:
+
+* Provider
+* Model
+* Endpoint
+* API key
+* Temperature
+* Max output length
+* Whether sensitive data may be included
+* Whether anonymization should be applied
+
+---
+
+### 11.1 LLM Responsibilities
+
+The LLM can generate:
+
+* Executive summary
+* Strategic recommendation
+* Risk analysis
+* Architecture rationale
+* Leadership alignment interpretation
+* Suggested roadmap
+* Governance recommendations
+* Questions for leadership discussion
+* Board-level narrative
+* Consultant-style report text
+
+The LLM should receive structured JSON from the scoring engine.
+
+Example input:
+
+```json
+{
+  "recommended_outcome": "Hybrid AI Operating Model",
+  "scores": {
+    "strong_vendor_commitment": 63,
+    "hybrid": 86,
+    "independent": 82
+  },
+  "top_criteria": [
+    "Governance and Compliance",
+    "Vendor Dependency Risk",
+    "System Complexity"
+  ],
+  "low_readiness_areas": [
+    "Internal AI capability",
+    "Operating model maturity"
+  ],
+  "leadership_alignment": {
+    "strong_alignment": ["Governance", "Vendor Risk"],
+    "low_alignment": ["Cost Control", "Agentic Ambition"]
+  },
+  "strategic_importance_overrides": [
+    {
+      "initiative": "Independent orchestration pilot",
+      "base_score": 58,
+      "strategic_importance": 9,
+      "final_score": 90
+    }
+  ]
+}
+```
+
+The LLM then generates the narrative.
+
+---
+
+## 12. Report Output
+
+The application should generate a report with the following structure.
+
+### 12.1 Executive Summary
+
+* Recommended architecture position
+* Score overview
+* Strategic interpretation
+* Key leadership alignment findings
+* Main risks
+* Recommended next steps
+
+---
+
+### 12.2 Architecture Positioning Result
+
+| Outcome                      | Score | Interpretation                                         |
+| ---------------------------- | ----: | ------------------------------------------------------ |
+| Strong Vendor Commitment     |    63 | Useful for productivity and vendor-led standardization |
+| Hybrid AI Operating Model    |    86 | Best current strategic fit                             |
+| Independent AI Control Model |    82 | Strong long-term target                                |
+
+---
+
+### 12.3 Criteria Weighting
+
+| Criterion                 | Weight |
+| ------------------------- | -----: |
+| Governance and Compliance |    18% |
+| Vendor Dependency Risk    |    16% |
+| System Complexity         |    14% |
+| Business Criticality      |    13% |
+| Agentic Ambition          |    12% |
+| Data and IP Sensitivity   |    10% |
+| Model Flexibility         |     8% |
+| Cost Control              |     5% |
+| Internal Readiness        |     4% |
+
+---
+
+### 12.4 Leadership Alignment
+
+* Alignment heatmap
+* Role-based weighting view
+* Outlier analysis
+* Areas requiring leadership discussion
+
+---
+
+### 12.5 Strategic Importance Appendix
+
+* Strategic Importance settings
+* Boosted projects or outcomes
+* Justifications
+* Executive sponsors
+* Difference between Base AHP Score and Final Strategic Score
+
+---
+
+### 12.6 Roadmap Recommendation
+
+Example roadmap:
+
+| Phase        | Focus                                                         |
+| ------------ | ------------------------------------------------------------- |
+| 0–3 months   | Confirm AI operating model and governance structure           |
+| 3–6 months   | Pilot hybrid orchestration for selected use cases             |
+| 6–12 months  | Build portfolio governance and model selection process        |
+| 12–24 months | Expand independent control for business-critical AI workflows |
+
+---
+
+## 13. Data Model
+
+Recommended SQLite entities:
+
+### Project
+
+| Field        | Type     |
+| ------------ | -------- |
+| id           | UUID     |
+| name         | Text     |
+| company_name | Text     |
+| industry     | Text     |
+| created_at   | DateTime |
+| owner        | Text     |
+| time_horizon | Text     |
+| description  | Text     |
+
+---
+
+### Criterion
+
+| Field       | Type     |
+| ----------- | -------- |
+| id          | UUID     |
+| project_id  | UUID     |
+| name        | Text     |
+| description | Text     |
+| category    | Text     |
+| active      | Boolean  |
+| created_at  | DateTime |
+
+---
+
+### Respondent
+
+| Field              | Type  |
+| ------------------ | ----- |
+| id                 | UUID  |
+| project_id         | UUID  |
+| name               | Text  |
+| role               | Text  |
+| weighting          | Float |
+| email              | Text  |
+| imported_from_file | Text  |
+
+---
+
+### PairwiseResponse
+
+| Field          | Type     |
+| -------------- | -------- |
+| id             | UUID     |
+| project_id     | UUID     |
+| respondent_id  | UUID     |
+| criterion_a    | UUID     |
+| criterion_b    | UUID     |
+| selected_value | Float    |
+| created_at     | DateTime |
+
+---
+
+### AlternativeScore
+
+| Field         | Type  |
+| ------------- | ----- |
+| id            | UUID  |
+| project_id    | UUID  |
+| respondent_id | UUID  |
+| criterion_id  | UUID  |
+| outcome       | Text  |
+| score         | Float |
+
+---
+
+### StrategicImportance
+
+| Field                | Type    |
+| -------------------- | ------- |
+| id                   | UUID    |
+| project_id           | UUID    |
+| item_name            | Text    |
+| item_type            | Text    |
+| base_score           | Float   |
+| strategic_importance | Integer |
+| final_score          | Float   |
+| executive_sponsor    | Text    |
+| justification        | Text    |
+| risk_of_not_acting   | Text    |
+| review_date          | Date    |
+
+---
+
+### LLMSettings
+
+| Field           | Type    |
+| --------------- | ------- |
+| id              | UUID    |
+| project_id      | UUID    |
+| provider        | Text    |
+| model           | Text    |
+| endpoint        | Text    |
+| use_local       | Boolean |
+| anonymize_input | Boolean |
+| enabled         | Boolean |
+
+---
+
+## 14. Main Screens
+
+### 14.1 Home Screen
+
+* Create new assessment
+* Open existing assessment
+* Import project
+* Export project
+* Settings
+
+---
+
+### 14.2 Project Dashboard
+
+Shows:
+
+* Assessment status
+* Number of respondents
+* Criteria selected
+* Uploaded survey files
+* Calculation readiness
+* Latest recommendation
+
+---
+
+### 14.3 Criteria Builder
+
+Allows user to:
+
+* Select default criteria
+* Add custom criteria
+* Edit criteria descriptions
+* Reorder criteria
+* Save criteria template
+
+---
+
+### 14.4 Survey Template Generator
+
+Allows user to:
+
+* Generate Excel survey template
+* Select respondents
+* Select scoring mode
+* Include Strategic Importance appendix
+* Export blank template
+
+---
+
+### 14.5 Upload and Validation Screen
+
+Allows user to:
+
+* Upload completed Excel files
+* See validation status
+* View missing fields
+* Accept or reject files
+* Re-upload corrected files
+
+---
+
+### 14.6 AHP Results Screen
+
+Shows:
+
+* Criteria weights
+* Consistency ratios
+* Respondent-level results
+* Group-level results
+* Weighting method
+* AHP matrix details
+
+---
+
+### 14.7 Architecture Recommendation Screen
+
+Shows:
+
+* Score for Strong Vendor Commitment
+* Score for Hybrid
+* Score for Independent
+* Recommended outcome
+* Long-term target
+* Confidence level
+* Main drivers
+
+---
+
+### 14.8 Strategic Importance Appendix Screen
+
+Allows user to:
+
+* Add project, initiative, or outcome
+* Set Strategic Importance 0–10
+* Add justification
+* Add executive sponsor
+* See score adjustment
+* Include or exclude in final report
+
+---
+
+### 14.9 LLM Analysis Screen
+
+Allows user to:
+
+* Enable or disable LLM
+* Select local or API model
+* Generate executive summary
+* Generate recommendation narrative
+* Regenerate with different tone
+* View prompt input before sending
+
+---
+
+### 14.10 Export Screen
+
+Exports:
+
+* Excel result file
+* PDF report
+* Word report
+* PowerPoint summary
+* JSON project archive
+
+MVP should prioritize Excel and PDF export first.
+
+---
+
+## 15. Calculation Engine
+
+The Python backend should expose calculation endpoints.
+
+Example endpoints:
+
+```text
+POST /projects
+GET /projects/{id}
+POST /projects/{id}/criteria
+POST /projects/{id}/generate-survey-template
+POST /projects/{id}/upload-survey
+POST /projects/{id}/calculate-ahp
+POST /projects/{id}/calculate-scores
+POST /projects/{id}/strategic-importance
+POST /projects/{id}/generate-llm-analysis
+GET /projects/{id}/export-report
+```
+
+The calculation engine should be modular.
+
+Recommended Python modules:
+
+```text
+/app
+  /api
+  /core
+    ahp.py
+    scoring.py
+    consistency.py
+    aggregation.py
+    strategic_importance.py
+    alignment.py
+    llm_analysis.py
+  /excel
+    template_generator.py
+    survey_importer.py
+    validator.py
+  /reports
+    pdf_export.py
+    excel_export.py
+  /db
+    models.py
+    repository.py
+```
+
+---
+
+## 16. MVP Scope
+
+The first MVP should include:
+
+1. Local standalone application
+2. React GUI
+3. FastAPI backend
+4. SQLite database
+5. Project creation
+6. Criteria builder
+7. Default criteria library
+8. Excel survey template generation
+9. Excel survey upload
+10. AHP criteria weighting
+11. Consistency ratio
+12. Alternative scoring
+13. Three generalized outcomes
+14. Strategic Importance appendix
+15. Final scoring with boost/floor logic
+16. Leadership alignment view
+17. Basic report export
+18. Optional LLM summary through API or local endpoint
+
+Do not overbuild the first version.
+
+The MVP should prove the core workflow:
+
+> Define criteria → collect leadership input → calculate AHP → score outcomes → apply strategic importance → generate recommendation.
+
+---
+
+## 17. Future Enhancements
+
+Future versions can add:
+
+* Direct in-app survey completion
+* Multi-company benchmarking
+* Web-based collaboration mode
+* Role-based login
+* Full AHP alternative comparison
+* Scenario simulation
+* Monte Carlo sensitivity analysis
+* Advanced leadership disagreement analytics
+* PowerPoint export
+* Custom report branding
+* Industry-specific criteria templates
+* AI readiness maturity model
+* Portfolio-level initiative ranking
+* Integration with SharePoint, Teams, Google Drive, or email
+* Offline encrypted project files
+* Consultant mode with multiple clients
+
+---
+
+## 18. Security and Privacy
+
+The application should be local-first.
+
+By default:
+
+* No data leaves the machine.
+* Uploaded Excel files are stored locally.
+* Results are stored in SQLite.
+* LLM analysis is disabled unless the user enables it.
+* API keys are stored locally and encrypted where possible.
+* Reports clearly state whether an external LLM was used.
+
+When API LLM is enabled, the user should see a warning:
+
+> External LLM analysis may send assessment data to the selected provider. Use local LLM mode for sensitive or confidential assessments.
+
+Local LLM mode should be supported for confidential companies.
+
+---
+
+## 19. Key Design Principle
+
+The system must separate calculation from interpretation.
+
+The AHP and scoring model produce the result.
+
+The LLM explains the result.
+
+The Strategic Importance parameter adjusts the final score only when explicitly declared by the user.
+
+This gives the tool credibility.
+
+The final report should always show:
+
+1. Base AHP Score
+2. Strategic Importance adjustment
+3. Final Strategic Score
+4. Recommendation
+5. Rationale
+
+---
+
+## 20. Success Criteria
+
+The product is successful when it can help a leadership team move from subjective debate to structured decision-making.
+
+Success means the user can answer:
+
+* What matters most to our leadership team?
+* Are we aligned on AI architecture priorities?
+* Which architecture posture fits our strategy?
+* Are we overcommitting to a vendor ecosystem?
+* Do we need a hybrid control layer?
+* Is independence strategically important?
+* Which projects deserve priority even if normal scoring is not perfect?
+* What should we do next?
+
+The end result should be a professional advisory-grade recommendation.
+
+---
+
+## 21. Final Product Positioning
+
+The Strategic AI Choice Engine is not just a scoring tool.
+
+It is a structured boardroom decision product for AI architecture strategy.
+
+It helps companies decide whether they should choose:
+
+* **Strong Vendor Commitment**
+* **Hybrid AI Operating Model**
+* **Independent AI Control Model**
+
+The strongest positioning statement is:
+
+> A leadership decision engine for choosing the right AI architecture posture — based on strategy, risk, governance, business value, and architectural independence.
+
+Alternative positioning:
+
+> Turn AI architecture from a vendor-driven decision into a structured strategic choice.
+
+---
