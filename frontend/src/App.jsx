@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import {
   Home as HomeIcon, LayoutDashboard, ListChecks, FileSpreadsheet,
   Upload, Calculator, Target, Shield, Brain, Download, Settings,
-  ChevronRight, FolderOpen, Plus, BookOpen, HelpCircle, Info
+  ChevronRight, FolderOpen, Plus, BookOpen, HelpCircle, Info, FileText
 } from 'lucide-react';
 
 import Home from './pages/Home';
@@ -14,9 +14,11 @@ import UploadValidation from './pages/UploadValidation';
 import AHPResults from './pages/AHPResults';
 import Recommendation from './pages/Recommendation';
 import StrategicImportance from './pages/StrategicImportance';
+import StrategicContext from './pages/StrategicContext';
 import LLMAnalysis from './pages/LLMAnalysis';
 import ExportReport from './pages/ExportReport';
 import SettingsPage from './pages/SettingsPage';
+import ReferenceManual from './pages/ReferenceManual';
 import api from './api/client';
 
 function Sidebar({ projectId }) {
@@ -29,7 +31,8 @@ function Sidebar({ projectId }) {
 
   const projectNav = projectId ? [
     { to: `/project/${projectId}`, icon: LayoutDashboard, label: 'Dashboard', section: 'Assessment' },
-    { to: `/project/${projectId}/criteria`, icon: ListChecks, label: 'Criteria Builder', section: null },
+    { to: `/project/${projectId}/criteria`, icon: ListChecks, label: 'Evaluation Criteria', section: null },
+    { to: `/project/${projectId}/strategic-context`, icon: FileText, label: 'Strategic Context', section: null },
     { to: `/project/${projectId}/survey`, icon: FileSpreadsheet, label: 'Survey Generator', section: null },
     { to: `/project/${projectId}/upload`, icon: Upload, label: 'Upload & Validate', section: null },
     { to: `/project/${projectId}/ahp`, icon: Calculator, label: 'AHP Results', section: 'Analysis' },
@@ -44,8 +47,7 @@ function Sidebar({ projectId }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
-        <img src="/logo.png" alt="AlphaAlign" />
-        <h1>ALPHAALIGN</h1>
+        <img src="/logo.png" alt="AlphaAlign" style={{ width: 60, height: 60 }} />
       </div>
       <nav className="sidebar-nav">
         <NavLink to="/" end className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
@@ -95,8 +97,11 @@ function Sidebar({ projectId }) {
 
           </>
         )}
-        {/* Settings - always visible at bottom */}
+        {/* Bottom nav - always visible */}
         <div style={{ marginTop: 'auto', paddingTop: 16, borderTop: '1px solid var(--border-subtle)' }}>
+          <NavLink to="/reference" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <BookOpen /> Reference Manual
+          </NavLink>
           <NavLink to="/settings" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             <Settings /> Settings
           </NavLink>
@@ -118,6 +123,7 @@ function ProjectLayout() {
         <Routes>
           <Route index element={<ProjectDashboard />} />
           <Route path="criteria" element={<CriteriaBuilder />} />
+          <Route path="strategic-context" element={<StrategicContext />} />
           <Route path="survey" element={<SurveyGenerator />} />
           <Route path="upload" element={<UploadValidation />} />
           <Route path="ahp" element={<AHPResults />} />
@@ -144,6 +150,12 @@ export default function App() {
         <div className="app-layout">
           <Sidebar />
           <main className="main-content"><SettingsPage /></main>
+        </div>
+      } />
+      <Route path="/reference" element={
+        <div className="app-layout">
+          <Sidebar />
+          <main className="main-content"><ReferenceManual /></main>
         </div>
       } />
       <Route path="/project/:projectId/*" element={<ProjectLayout />} />

@@ -34,6 +34,13 @@ class Project(Base):
     key_systems: Mapped[str] = mapped_column(Text, default="")  # JSON array as string
     ai_ambition: Mapped[str] = mapped_column(String(100), default="")
     notes: Mapped[str] = mapped_column(Text, default="")
+    
+    # Strategic Context Fields (qualitative inputs for the LLM)
+    strategic_goals: Mapped[str] = mapped_column(Text, default="")
+    regulatory_constraints: Mapped[str] = mapped_column(Text, default="")
+    incumbent_vendors: Mapped[str] = mapped_column(Text, default="")
+    internal_capabilities: Mapped[str] = mapped_column(Text, default="")
+    
     status: Mapped[str] = mapped_column(String(50), default="draft")
     scoring_mode: Mapped[str] = mapped_column(String(20), default="simple")
     aggregation_method: Mapped[str] = mapped_column(String(20), default="equal")
@@ -62,6 +69,12 @@ class Criterion(Base):
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
     is_mandatory: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    # Expert-derived outcome scores (1-5):  how well each AI architecture fits this criterion.
+    # These are admin-tunable defaults so survey respondents don't have to score them.
+    vendor_score: Mapped[float] = mapped_column(Float, default=3.0)      # Strong Vendor Commitment
+    hybrid_score: Mapped[float] = mapped_column(Float, default=3.0)      # Hybrid AI Operating Model
+    independent_score: Mapped[float] = mapped_column(Float, default=3.0) # Independent AI Control Model
 
     project: Mapped["Project"] = relationship(back_populates="criteria")
 

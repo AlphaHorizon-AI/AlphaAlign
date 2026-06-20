@@ -67,39 +67,6 @@ def validate_survey(
             if cid and cid not in criteria_ids:
                 errors.append(f"Pairwise comparison references unknown criterion ID: {cid}")
 
-    # 3. Validate alternative scores
-    alt_scores = survey_data.get("alternative_scores", [])
-    valid_outcomes = {"vendor", "hybrid", "independent"}
-
-    if len(alt_scores) == 0:
-        warnings.append("No alternative scores found. The Alternative Scoring tab may be empty.")
-    else:
-        expected_scores = n * 3  # 3 outcomes per criterion
-        if len(alt_scores) < expected_scores:
-            missing = expected_scores - len(alt_scores)
-            warnings.append(f"Missing {missing} alternative score(s). Some criteria may not have scores for all outcomes.")
-
-        for score in alt_scores:
-            if score.get("outcome") not in valid_outcomes:
-                errors.append(f"Invalid outcome '{score.get('outcome')}'. Must be vendor, hybrid, or independent.")
-            val = score.get("score", 0)
-            if val < 1 or val > 5:
-                errors.append(f"Alternative score {val} is out of range. Must be 1-5.")
-            if score.get("criterion_id") not in criteria_ids:
-                errors.append(f"Alternative score references unknown criterion ID: {score.get('criterion_id')}")
-
-    # 4. Validate strategic importance
-    strategic = survey_data.get("strategic_importance", [])
-    for si in strategic:
-        val = si.get("strategic_importance", 0)
-        if val < 0 or val > 10:
-            errors.append(f"Strategic importance value {val} is out of range for '{si.get('item_name', '')}'. Must be 0-10.")
-        if val >= 7 and not si.get("justification"):
-            warnings.append(
-                f"Strategic importance is {val} for '{si.get('item_name', '')}' "
-                f"but no justification is provided. Justification is recommended for values ≥ 7."
-            )
-
     # 5. Check metadata
     metadata = survey_data.get("metadata", {})
     if not metadata.get("Project ID"):

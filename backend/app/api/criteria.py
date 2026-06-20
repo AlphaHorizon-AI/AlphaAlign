@@ -19,54 +19,64 @@ router = APIRouter()
 
 DEFAULT_CRITERIA = [
     {
-        "name": "Business Criticality",
-        "description": "How critical is AI to core business operations, revenue, and competitive advantage?",
+        "name": "Core Business Criticality",
+        "description": "How critical are the planned AI use cases to the company's core value proposition and revenue generation?",
         "category": "Strategic",
+        "vendor_score": 4.0, "hybrid_score": 4.0, "independent_score": 3.0,
     },
     {
-        "name": "Agentic Ambition",
-        "description": "To what extent does the company plan to deploy autonomous AI agents across business processes?",
+        "name": "Autonomous Operations Ambition",
+        "description": "To what extent do you envision AI taking autonomous actions (Agentic AI) versus just providing decision support?",
         "category": "Strategic",
+        "vendor_score": 2.0, "hybrid_score": 3.0, "independent_score": 5.0,
     },
     {
-        "name": "System Complexity",
-        "description": "How many systems (ERP, CRM, data platforms, legacy) must AI interact with?",
+        "name": "Enterprise Integration Complexity",
+        "description": "How deeply must AI integrate with existing legacy systems, ERPs, CRMs, and proprietary data lakes?",
         "category": "Technical",
+        "vendor_score": 4.0, "hybrid_score": 4.0, "independent_score": 2.0,
     },
     {
-        "name": "Vendor Dependency Risk",
-        "description": "How concerned is the company about over-dependence on a single vendor ecosystem?",
+        "name": "Vendor Lock-in Tolerance",
+        "description": "How acceptable is it to be highly dependent on a single major tech vendor for your AI capabilities?",
         "category": "Risk",
+        "vendor_score": 1.0, "hybrid_score": 3.0, "independent_score": 5.0,
     },
     {
-        "name": "Governance and Compliance Need",
-        "description": "How important are regulatory compliance, auditability, and AI governance controls?",
+        "name": "Regulatory & Compliance Rigor",
+        "description": "How strict are the regulatory, auditability, and data sovereignty requirements governing your industry?",
         "category": "Governance",
+        "vendor_score": 3.0, "hybrid_score": 3.0, "independent_score": 4.0,
     },
     {
-        "name": "Data and IP Sensitivity",
-        "description": "How sensitive is the data and intellectual property involved in AI workflows?",
+        "name": "Proprietary Data Sensitivity",
+        "description": "How sensitive is the internal data and IP that will be processed by these AI systems?",
         "category": "Governance",
+        "vendor_score": 2.0, "hybrid_score": 3.0, "independent_score": 5.0,
     },
     {
-        "name": "Model Flexibility Requirement",
-        "description": "How important is the ability to switch between AI models and providers?",
+        "name": "Technological Agility Needs",
+        "description": "How important is the ability to rapidly swap underlying AI models as technology evolves?",
         "category": "Technical",
+        "vendor_score": 1.0, "hybrid_score": 4.0, "independent_score": 5.0,
     },
     {
-        "name": "Cost Control Pressure",
-        "description": "How strongly does the company need to control and optimize AI-related costs?",
+        "name": "Cost Predictability Focus",
+        "description": "How important is strict predictability and optimization of ongoing AI operational costs?",
         "category": "Financial",
+        "vendor_score": 4.0, "hybrid_score": 3.0, "independent_score": 2.0,
     },
     {
-        "name": "Internal Capability Readiness",
-        "description": "Does the company have the internal talent, skills, and maturity to operate independent AI?",
+        "name": "In-House AI Capability",
+        "description": "How strong is your internal engineering, data science, and MLOps talent pool today?",
         "category": "Organizational",
+        "vendor_score": 5.0, "hybrid_score": 3.0, "independent_score": 1.0,
     },
     {
-        "name": "Speed to Implementation",
-        "description": "How quickly must AI capabilities be deployed and operational?",
+        "name": "Time-to-Value Urgency",
+        "description": "How urgently does the organization need to deploy functional AI capabilities to remain competitive?",
         "category": "Operational",
+        "vendor_score": 5.0, "hybrid_score": 3.0, "independent_score": 2.0,
     },
 ]
 
@@ -78,6 +88,9 @@ class CriterionCreate(BaseModel):
     description: str = ""
     category: str = ""
     is_mandatory: bool = False
+    vendor_score: float = 3.0
+    hybrid_score: float = 3.0
+    independent_score: float = 3.0
 
 
 class CriterionUpdate(BaseModel):
@@ -87,6 +100,9 @@ class CriterionUpdate(BaseModel):
     active: Optional[bool] = None
     is_mandatory: Optional[bool] = None
     sort_order: Optional[int] = None
+    vendor_score: Optional[float] = None
+    hybrid_score: Optional[float] = None
+    independent_score: Optional[float] = None
 
 
 class CriterionResponse(BaseModel):
@@ -98,6 +114,9 @@ class CriterionResponse(BaseModel):
     active: bool
     sort_order: int
     is_mandatory: bool
+    vendor_score: float
+    hybrid_score: float
+    independent_score: float
     created_at: datetime
 
     class Config:
@@ -122,25 +141,7 @@ async def list_criteria(project_id: str, session: AsyncSession = Depends(get_ses
 
 @router.post("/projects/{project_id}/criteria", response_model=CriterionResponse, status_code=201)
 async def add_criterion(project_id: str, data: CriterionCreate, session: AsyncSession = Depends(get_session)):
-    # Get max sort order
-    result = await session.execute(
-        select(Criterion.sort_order)
-        .where(Criterion.project_id == project_id)
-        .order_by(Criterion.sort_order.desc())
-    )
-    max_order = result.scalar() or 0
-
-    criterion = Criterion(
-        id=generate_uuid(),
-        project_id=project_id,
-        sort_order=max_order + 1,
-        **data.model_dump(),
-    )
-    session.add(criterion)
-    await session.commit()
-    await session.refresh(criterion)
-    return criterion
-
+    raise HTTPException(status_code=403, detail="Criteria are fixed for this assessment type and cannot be added.")
 
 @router.post("/projects/{project_id}/criteria/defaults", response_model=list[CriterionResponse], status_code=201)
 async def load_default_criteria(project_id: str, session: AsyncSession = Depends(get_session)):
@@ -162,7 +163,10 @@ async def load_default_criteria(project_id: str, session: AsyncSession = Depends
             description=default["description"],
             category=default["category"],
             sort_order=i,
-            is_mandatory=True if i < 5 else False,
+            is_mandatory=True, # All fixed criteria are mandatory
+            vendor_score=default.get("vendor_score", 3.0),
+            hybrid_score=default.get("hybrid_score", 3.0),
+            independent_score=default.get("independent_score", 3.0),
         )
         session.add(criterion)
         criteria.append(criterion)
@@ -186,7 +190,12 @@ async def update_criterion(
     if not criterion:
         raise HTTPException(status_code=404, detail="Criterion not found")
 
-    for key, value in data.model_dump(exclude_unset=True).items():
+    # Only allow updating scores and description, not name
+    update_data = data.model_dump(exclude_unset=True)
+    if "name" in update_data:
+        del update_data["name"]
+
+    for key, value in update_data.items():
         setattr(criterion, key, value)
 
     await session.commit()
@@ -196,15 +205,7 @@ async def update_criterion(
 
 @router.delete("/projects/{project_id}/criteria/{criterion_id}", status_code=204)
 async def delete_criterion(project_id: str, criterion_id: str, session: AsyncSession = Depends(get_session)):
-    result = await session.execute(
-        select(Criterion).where(Criterion.id == criterion_id, Criterion.project_id == project_id)
-    )
-    criterion = result.scalar_one_or_none()
-    if not criterion:
-        raise HTTPException(status_code=404, detail="Criterion not found")
-
-    await session.delete(criterion)
-    await session.commit()
+    raise HTTPException(status_code=403, detail="Criteria are fixed for this assessment type and cannot be deleted.")
 
 
 @router.post("/projects/{project_id}/criteria/reorder", status_code=200)

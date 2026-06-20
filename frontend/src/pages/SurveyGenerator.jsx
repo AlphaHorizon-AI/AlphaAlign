@@ -27,7 +27,11 @@ export default function SurveyGenerator() {
     setDownloading(false);
   };
 
-  const tabs = ['Instructions', 'Respondent Profile', 'Pairwise Comparison', 'Alternative Scoring', 'Strategic Importance', 'Comments', 'Metadata'];
+  const tabs = [
+    { name: 'Welcome', desc: 'Instructions, progress bar, and respondent info' },
+    { name: 'Pairwise Survey', desc: 'Simple dropdown questions — the only thing to fill in' },
+    { name: 'Comments', desc: 'Optional observations and notes' },
+  ];
 
   return (
     <>
@@ -36,12 +40,16 @@ export default function SurveyGenerator() {
         <p>Generate an Excel survey template for leadership respondents</p>
       </div>
       <div className="page-content">
-        <div className="card mb-6">
+          <div className="card mb-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="card-title">Generate Excel Survey Template</h3>
+              <h3 className="card-title">Generate Smart Survey Template</h3>
               <p className="text-sm text-muted mt-2">
-                The template includes all criteria and scoring sections. Send it to leadership respondents for completion.
+                Generates a simple Excel file with <strong>plain-language dropdown questions</strong>.
+                No math, no numbers, no technical knowledge required — respondents just pick from a list.
+              </p>
+              <p className="text-sm text-muted mt-1">
+                With {criteria.length} criteria, the survey contains <strong>{criteria.length * (criteria.length - 1) / 2} comparison questions</strong> (takes ~10-15 minutes).
               </p>
             </div>
             <button className="btn btn-primary btn-lg" onClick={downloadTemplate} disabled={criteria.length < 2 || downloading}>
@@ -57,18 +65,23 @@ export default function SurveyGenerator() {
           </div>
         )}
 
-        {/* Template Structure Preview */}
         <div className="card mb-6">
-          <h3 className="card-title mb-4">Template Structure</h3>
-          <p className="text-sm text-muted mb-4">The generated Excel file will contain {tabs.length} tabs:</p>
+          <h3 className="card-title mb-4">What the Respondent Sees</h3>
+          <p className="text-sm text-muted mb-4">The Excel file has just {tabs.length} simple tabs:</p>
           <div className="flex flex-col gap-2">
             {tabs.map((tab, i) => (
-              <div key={tab} className="flex items-center gap-3 animate-in" style={{ padding: '10px 14px', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', animationDelay: `${i * 50}ms` }}>
+              <div key={tab.name} className="flex items-center gap-3 animate-in" style={{ padding: '12px 14px', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', animationDelay: `${i * 50}ms` }}>
                 <span style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--accent-glow)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700 }}>{i+1}</span>
-                <span style={{ fontWeight: 500 }}>{tab}</span>
+                <div>
+                  <span style={{ fontWeight: 600 }}>{tab.name}</span>
+                  <span className="text-sm text-muted" style={{ marginLeft: 8 }}>— {tab.desc}</span>
+                </div>
               </div>
             ))}
           </div>
+          <p className="text-sm text-muted mt-4" style={{ fontStyle: 'italic' }}>
+            Outcome scoring is handled automatically by expert-derived defaults — respondents never see it.
+          </p>
         </div>
 
         {/* Criteria included */}

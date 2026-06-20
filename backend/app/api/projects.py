@@ -29,6 +29,10 @@ class ProjectCreate(BaseModel):
     key_systems: str = "[]"
     ai_ambition: str = ""
     notes: str = ""
+    strategic_goals: str = ""
+    regulatory_constraints: str = ""
+    incumbent_vendors: str = ""
+    internal_capabilities: str = ""
 
 
 class ProjectUpdate(BaseModel):
@@ -42,6 +46,10 @@ class ProjectUpdate(BaseModel):
     key_systems: Optional[str] = None
     ai_ambition: Optional[str] = None
     notes: Optional[str] = None
+    strategic_goals: Optional[str] = None
+    regulatory_constraints: Optional[str] = None
+    incumbent_vendors: Optional[str] = None
+    internal_capabilities: Optional[str] = None
     status: Optional[str] = None
     scoring_mode: Optional[str] = None
     aggregation_method: Optional[str] = None
@@ -59,6 +67,10 @@ class ProjectResponse(BaseModel):
     key_systems: str
     ai_ambition: str
     notes: str
+    strategic_goals: str
+    regulatory_constraints: str
+    incumbent_vendors: str
+    internal_capabilities: str
     status: str
     scoring_mode: str
     aggregation_method: str
@@ -75,13 +87,38 @@ class ProjectResponse(BaseModel):
 
 @router.post("/projects", response_model=ProjectResponse, status_code=201)
 async def create_project(data: ProjectCreate, session: AsyncSession = Depends(get_session)):
+    from app.api.criteria import DEFAULT_CRITERIA
+    from app.db.models import Criterion
+    
     project = Project(
         id=generate_uuid(),
         **data.model_dump(),
     )
     session.add(project)
+    
+    # Automatically inject the 10 fixed criteria
+    criteria = []
+    for i, default in enumerate(DEFAULT_CRITERIA):
+        criterion = Criterion(
+            id=generate_uuid(),
+            project_id=project.id,
+            name=default["name"],
+            description=default["description"],
+            category=default["category"],
+            sort_order=i,
+            is_mandatory=True,
+            vendor_score=default.get("vendor_score", 3.0),
+            hybrid_score=default.get("hybrid_score", 3.0),
+            independent_score=default.get("independent_score", 3.0),
+        )
+        session.add(criterion)
+        criteria.append(criterion)
+        
     await session.commit()
     await session.refresh(project)
+    
+    # Manually attach criteria to avoid lazy load issue in _to_response
+    project.criteria = criteria
     return _to_response(project)
 
 
@@ -137,6 +174,10 @@ async def duplicate_project(project_id: str, session: AsyncSession = Depends(get
         key_systems=original.key_systems,
         ai_ambition=original.ai_ambition,
         notes=original.notes,
+        strategic_goals=original.strategic_goals,
+        regulatory_constraints=original.regulatory_constraints,
+        incumbent_vendors=original.incumbent_vendors,
+        internal_capabilities=original.internal_capabilities,
         scoring_mode=original.scoring_mode,
         aggregation_method=original.aggregation_method,
     )
@@ -179,6 +220,10 @@ def _to_response(project: Project) -> ProjectResponse:
         key_systems=project.key_systems,
         ai_ambition=project.ai_ambition,
         notes=project.notes,
+        strategic_goals=project.strategic_goals,
+        regulatory_constraints=project.regulatory_constraints,
+        incumbent_vendors=project.incumbent_vendors,
+        internal_capabilities=project.internal_capabilities,
         status=project.status,
         scoring_mode=project.scoring_mode,
         aggregation_method=project.aggregation_method,

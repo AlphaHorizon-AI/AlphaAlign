@@ -1,18 +1,45 @@
 """
-AlphaAlign — Excel Survey Importer.
+AlphaAlign -- Excel Survey Importer (v2).
 
-Parses completed Excel survey files and extracts respondent data,
-pairwise comparison values, alternative scores, and comments.
+Parses completed Excel survey files in both formats:
+  - v2: Question-per-row "Pairwise Survey" sheet with dropdown answers
+  - v1 (legacy): Raw NxN "Pairwise Comparison" matrix
+
+Extracts respondent data, pairwise comparison values, alternative scores,
+strategic importance, and comments.
 """
 
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Optional
 from openpyxl import load_workbook
 import io
 
 
+# ── Dropdown label to Saaty value mapping ──
+DROPDOWN_TO_VALUE = {
+    "A is overwhelmingly more important": 9.0,
+    "A is much more important": 7.0,
+    "A is clearly more important": 5.0,
+    "A is slightly more important": 3.0,
+    "Equal importance": 1.0,
+    "B is slightly more important": 1/3,
+    "B is clearly more important": 1/5,
+    "B is much more important": 1/7,
+    "B is overwhelmingly more important": 1/9,
+}
+
+# ── Outcome score label to numeric value ──
+OUTCOME_LABEL_TO_VALUE = {
+    "1 - Very Poor Fit": 1.0,
+    "2 - Poor Fit": 2.0,
+    "3 - Moderate Fit": 3.0,
+    "4 - Good Fit": 4.0,
+    "5 - Excellent Fit": 5.0,
+}
+
+
 def import_survey(file_content: bytes, criteria_map: Dict[str, str]) -> Dict:
     """
-    Import a completed survey file.
+    Import a completed survey file (v1 or v2 format).
 
     Args:
         file_content: Raw bytes of the Excel file.
@@ -27,7 +54,7 @@ def import_survey(file_content: bytes, criteria_map: Dict[str, str]) -> Dict:
             comments: str
             metadata: {project_id, ...}
     """
-    wb = load_workbook(io.BytesIO(file_content), data_only=True)
+    wb = load_workbook(io.BytesIO(file_content), data_only=True, keep_vba=True)
 
     respondent = _parse_respondent(wb)
     pairwise = _parse_pairwise(wb, criteria_map)
@@ -46,56 +73,146 @@ def import_survey(file_content: bytes, criteria_map: Dict[str, str]) -> Dict:
     }
 
 
+# ══════════════════════════════════════════════════════════════════════════════
+#  Respondent
+# ══════════════════════════════════════════════════════════════════════════════
+
 def _parse_respondent(wb) -> Dict:
-    if "Respondent Profile" not in wb.sheetnames:
-        return {"name": "", "role": "", "email": ""}
+    """Parse respondent info from Welcome or Respondent Profile sheet."""
+    # Try v2 format (Welcome sheet)
+    if "Welcome" in wb.sheetnames:
+        ws = wb["Welcome"]
+        data = {}
+        field_map = {"Name": "name", "Role": "role", "Email": "email"}
+        # In v2, respondent info starts after the progress section
+        for row in ws.iter_rows(min_row=1, max_row=50, max_col=2, values_only=False):
+            if len(row) >= 2 and row[0].value and str(row[0].value).strip() in field_map:
+                key = field_map[str(row[0].value).strip()]
+                val = row[1].value or ""
+                # Skip placeholder text
+                val_str = str(val).strip()
+                if val_str and not val_str.startswith("Enter your") and not val_str.startswith("e.g.") and val_str != "(optional)":
+                    data[key] = val_str
+        return {
+            "name": data.get("name", ""),
+            "role": data.get("role", ""),
+            "email": data.get("email", ""),
+        }
 
-    ws = wb["Respondent Profile"]
-    data = {}
-    field_map = {"Name": "name", "Role": "role", "Email": "email"}
+    # Try v1 format (Respondent Profile sheet)
+    if "Respondent Profile" in wb.sheetnames:
+        ws = wb["Respondent Profile"]
+        data = {}
+        field_map = {"Name": "name", "Role": "role", "Email": "email"}
+        for row in ws.iter_rows(min_row=3, max_row=10, max_col=2, values_only=False):
+            if len(row) >= 2 and row[0].value in field_map:
+                key = field_map[row[0].value]
+                val = row[1].value or ""
+                data[key] = str(val).strip()
+        return {
+            "name": data.get("name", ""),
+            "role": data.get("role", ""),
+            "email": data.get("email", ""),
+        }
 
-    for row in ws.iter_rows(min_row=3, max_row=10, max_col=2, values_only=False):
-        if len(row) >= 2 and row[0].value in field_map:
-            key = field_map[row[0].value]
-            val = row[1].value or ""
-            data[key] = str(val).strip()
+    return {"name": "", "role": "", "email": ""}
 
-    return {
-        "name": data.get("name", ""),
-        "role": data.get("role", ""),
-        "email": data.get("email", ""),
-    }
 
+# ══════════════════════════════════════════════════════════════════════════════
+#  Pairwise Comparisons
+# ══════════════════════════════════════════════════════════════════════════════
 
 def _parse_pairwise(wb, criteria_map: Dict[str, str]) -> List[Dict]:
-    if "Pairwise Comparison" not in wb.sheetnames:
-        return []
+    """Parse pairwise comparisons from v2 or v1 format."""
+    # Try v2 format first (question-per-row)
+    if "Pairwise Survey" in wb.sheetnames:
+        return _parse_pairwise_v2(wb, criteria_map)
 
-    ws = wb["Pairwise Comparison"]
+    # Fall back to v1 format (matrix)
+    if "Pairwise Comparison" in wb.sheetnames:
+        return _parse_pairwise_v1(wb, criteria_map)
+
+    return []
+
+
+def _parse_pairwise_v2(wb, criteria_map: Dict[str, str]) -> List[Dict]:
+    """Parse v2 question-per-row format."""
+    ws = wb["Pairwise Survey"]
     results = []
 
-    # Find header row (row 4 by convention)
+    for row in range(5, ws.max_row + 1):
+        # Column B: Criterion A name, Column D: Criterion B name
+        crit_a_name = ws.cell(row=row, column=2).value
+        crit_b_name = ws.cell(row=row, column=4).value
+
+        if not crit_a_name or not crit_b_name:
+            continue
+
+        crit_a_name = str(crit_a_name).strip()
+        crit_b_name = str(crit_b_name).strip()
+
+        # Look up criterion IDs
+        crit_a_id = criteria_map.get(crit_a_name)
+        crit_b_id = criteria_map.get(crit_b_name)
+        if not crit_a_id or not crit_b_id:
+            # Try hidden ID columns (G and H)
+            crit_a_id = crit_a_id or str(ws.cell(row=row, column=7).value or "").strip()
+            crit_b_id = crit_b_id or str(ws.cell(row=row, column=8).value or "").strip()
+        if not crit_a_id or not crit_b_id:
+            continue
+
+        # Try to get the computed Saaty value from hidden column F
+        saaty_value = ws.cell(row=row, column=6).value
+        if saaty_value is not None:
+            try:
+                value = float(saaty_value)
+                if value > 0:
+                    results.append({
+                        "criterion_a_id": crit_a_id,
+                        "criterion_b_id": crit_b_id,
+                        "value": value,
+                    })
+                    continue
+            except (ValueError, TypeError):
+                pass
+
+        # Fallback: convert dropdown label to value directly
+        dropdown_text = ws.cell(row=row, column=5).value
+        if dropdown_text:
+            dropdown_text = str(dropdown_text).strip()
+            value = DROPDOWN_TO_VALUE.get(dropdown_text)
+            if value is not None and value > 0:
+                results.append({
+                    "criterion_a_id": crit_a_id,
+                    "criterion_b_id": crit_b_id,
+                    "value": value,
+                })
+
+    return results
+
+
+def _parse_pairwise_v1(wb, criteria_map: Dict[str, str]) -> List[Dict]:
+    """Parse v1 matrix format (legacy backward compatibility)."""
+    ws = wb["Pairwise Comparison"]
+    results = []
     header_row = 4
-    criteria_cols = {}  # col_index -> criterion_name
+    criteria_cols = {}
 
     for col in range(2, ws.max_column + 1):
         val = ws.cell(row=header_row, column=col).value
         if val and str(val).strip() in criteria_map:
             criteria_cols[col] = str(val).strip()
 
-    # Read row labels
-    criteria_rows = {}  # row_index -> criterion_name
+    criteria_rows = {}
     for row in range(header_row + 1, ws.max_row + 1):
         val = ws.cell(row=row, column=1).value
         if val and str(val).strip() in criteria_map:
             criteria_rows[row] = str(val).strip()
 
-    # Read upper triangle values
     for row_idx, row_name in criteria_rows.items():
         for col_idx, col_name in criteria_cols.items():
             if row_name == col_name:
                 continue
-            # Only read upper triangle
             row_order = list(criteria_rows.values())
             col_order = list(criteria_cols.values())
             if row_order.index(row_name) >= col_order.index(col_name):
@@ -134,80 +251,25 @@ def _parse_ahp_value(value) -> Optional[float]:
     return None
 
 
+# ══════════════════════════════════════════════════════════════════════════════
+#  Alternative Scores (No longer in survey, using DB defaults instead)
+# ══════════════════════════════════════════════════════════════════════════════
+
 def _parse_alternative_scores(wb, criteria_map: Dict[str, str]) -> List[Dict]:
-    if "Alternative Scoring" not in wb.sheetnames:
-        return []
+    return []
 
-    ws = wb["Alternative Scoring"]
-    results = []
-    outcome_map = {
-        "Strong Vendor Commitment": "vendor",
-        "Hybrid AI Operating Model": "hybrid",
-        "Independent AI Control Model": "independent",
-    }
 
-    # Read header row (row 4)
-    header_row = 4
-    outcome_cols = {}
-    for col in range(2, ws.max_column + 1):
-        val = ws.cell(row=header_row, column=col).value
-        if val and str(val).strip() in outcome_map:
-            outcome_cols[col] = outcome_map[str(val).strip()]
-
-    # Read data rows
-    for row in range(header_row + 1, ws.max_row + 1):
-        criterion_name = ws.cell(row=row, column=1).value
-        if not criterion_name or str(criterion_name).strip() not in criteria_map:
-            continue
-
-        cid = criteria_map[str(criterion_name).strip()]
-        for col_idx, outcome in outcome_cols.items():
-            val = ws.cell(row=row, column=col_idx).value
-            if val is not None:
-                try:
-                    score = float(val)
-                    score = max(1, min(5, score))  # Clamp to 1-5
-                    results.append({
-                        "criterion_id": cid,
-                        "outcome": outcome,
-                        "score": score,
-                    })
-                except (ValueError, TypeError):
-                    pass
-
-    return results
-
+# ══════════════════════════════════════════════════════════════════════════════
+#  Strategic Importance (Removed to simplify survey)
+# ══════════════════════════════════════════════════════════════════════════════
 
 def _parse_strategic_importance(wb) -> List[Dict]:
-    if "Strategic Importance" not in wb.sheetnames:
-        return []
+    return []
 
-    ws = wb["Strategic Importance"]
-    results = []
 
-    for row in range(5, ws.max_row + 1):
-        name = ws.cell(row=row, column=1).value
-        if not name:
-            continue
-
-        si_value = ws.cell(row=row, column=3).value
-        try:
-            si = int(si_value) if si_value is not None else 0
-        except (ValueError, TypeError):
-            si = 0
-
-        results.append({
-            "item_name": str(name).strip(),
-            "item_type": str(ws.cell(row=row, column=2).value or "outcome").strip(),
-            "strategic_importance": max(0, min(10, si)),
-            "justification": str(ws.cell(row=row, column=4).value or "").strip(),
-            "executive_sponsor": str(ws.cell(row=row, column=5).value or "").strip(),
-            "time_horizon": str(ws.cell(row=row, column=6).value or "").strip(),
-            "risk_of_not_acting": str(ws.cell(row=row, column=7).value or "").strip(),
-        })
-
-    return results
-
+# ══════════════════════════════════════════════════════════════════════════════
+#  Comments & Metadata
+# ══════════════════════════════════════════════════════════════════════════════
 
 def _parse_comments(wb) -> str:
     if "Comments" not in wb.sheetnames:

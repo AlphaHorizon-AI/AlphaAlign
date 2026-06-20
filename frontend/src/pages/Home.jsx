@@ -38,8 +38,6 @@ export default function Home() {
     if (!form.name || !form.company_name) return;
     try {
       const { data } = await api.post('/projects', form);
-      // Auto-load default criteria
-      await api.post(`/projects/${data.id}/criteria/defaults`);
       navigate(`/project/${data.id}`);
     } catch(e) { console.error(e); }
   };

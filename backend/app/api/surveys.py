@@ -14,7 +14,7 @@ from app.db.models import (
     Project, Criterion, Respondent, PairwiseResponse,
     AlternativeScore, generate_uuid
 )
-from app.excel.template_generator import generate_survey_template
+from app.excel.template_generator import generate_survey_template, get_file_extension
 from app.excel.survey_importer import import_survey
 from app.excel.validator import validate_survey
 
@@ -51,10 +51,18 @@ async def generate_template(project_id: str, session: AsyncSession = Depends(get
         criteria=criteria_list,
     )
 
-    filename = f"AlphaAlign_Survey_{project.company_name.replace(' ', '_')}.xlsx"
+    ext = get_file_extension(buffer)
+    safe_company = project.company_name.replace(' ', '_').replace('"', '')
+    filename = f"AlphaAlign_Survey_{safe_company}{ext}"
+
+    if ext == ".xlsm":
+        mime = "application/vnd.ms-excel.sheet.macroEnabled.12"
+    else:
+        mime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
     return StreamingResponse(
         buffer,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        media_type=mime,
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
@@ -137,17 +145,22 @@ async def upload_survey(
         )
         session.add(pw)
 
-    # Save alternative scores
-    for score in survey_data.get("alternative_scores", []):
-        alt = AlternativeScore(
-            id=generate_uuid(),
-            project_id=project_id,
-            respondent_id=respondent.id,
-            criterion_id=score["criterion_id"],
-            outcome=score["outcome"],
-            score=score["score"],
-        )
-        session.add(alt)
+    # Save alternative scores (using expert-derived defaults from the Criteria)
+    for c in criteria:
+        for outcome, score_val in [
+            ("vendor", c.vendor_score),
+            ("hybrid", c.hybrid_score),
+            ("independent", c.independent_score),
+        ]:
+            alt = AlternativeScore(
+                id=generate_uuid(),
+                project_id=project_id,
+                respondent_id=respondent.id,
+                criterion_id=c.id,
+                outcome=outcome,
+                score=score_val,
+            )
+            session.add(alt)
 
     await session.commit()
 
