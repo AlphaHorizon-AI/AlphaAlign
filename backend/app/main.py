@@ -63,3 +63,26 @@ app.include_router(settings_router, prefix="/api", tags=["Settings"])
 @app.get("/api/health")
 async def health_check():
     return {"status": "ok", "application": "AlphaAlign", "version": "1.0.0"}
+
+
+@app.post("/api/shutdown")
+async def shutdown():
+    """Gracefully shut down the AlphaAlign platform."""
+    import asyncio
+    import os
+    import signal
+    from fastapi.responses import JSONResponse
+    from starlette.background import BackgroundTask
+
+    async def _kill():
+        await asyncio.sleep(1)
+        import sys
+        if sys.platform == "win32":
+            os._exit(0)
+        else:
+            os.kill(os.getpid(), signal.SIGTERM)
+
+    return JSONResponse(
+        content={"status": "shutting_down", "message": "AlphaAlign is shutting down. You can close this tab."},
+        background=BackgroundTask(_kill),
+    )

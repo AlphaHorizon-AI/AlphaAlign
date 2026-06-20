@@ -771,3 +771,14 @@ input[type="range"]::-webkit-slider-thumb {
   border: 1px solid rgba(66, 165, 245, 0.2);
   color: var(--info);
 }
+
+/* ── Shutdown Button ── */
+.nav-item-shutdown {
+  color: var(--text-tertiary) !important;
+  transition: all var(--transition-fast);
+}
+
+.nav-item-shutdown:hover {
+  color: var(--error) !important;
+  background: var(--error-dim) !important;
+}

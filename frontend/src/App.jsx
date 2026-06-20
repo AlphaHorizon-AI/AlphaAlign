@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import {
   Home as HomeIcon, LayoutDashboard, ListChecks, FileSpreadsheet,
   Upload, Calculator, Target, Shield, Brain, Download, Settings,
-  ChevronRight, FolderOpen, Plus, BookOpen, HelpCircle, Info, FileText
+  ChevronRight, FolderOpen, Plus, BookOpen, HelpCircle, Info, FileText, Power
 } from 'lucide-react';
 
 import Home from './pages/Home';
@@ -105,6 +105,28 @@ function Sidebar({ projectId }) {
           <NavLink to="/settings" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             <Settings /> Settings
           </NavLink>
+          <div
+            className="nav-item nav-item-shutdown"
+            onClick={() => {
+              if (window.confirm('Shut down AlphaAlign?\n\nThis will stop the backend and frontend servers.')) {
+                api.post('/shutdown').then(() => {
+                  document.title = 'AlphaAlign — Shut Down';
+                  document.body.innerHTML = `
+                    <div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#07070d;color:#e8e8f0;font-family:Inter,sans-serif;flex-direction:column;gap:16px">
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#26a69a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+                      <h2 style="font-size:1.5rem;font-weight:700">AlphaAlign has been shut down</h2>
+                      <p style="color:#9a9ab0">You can safely close this tab.</p>
+                    </div>`;
+                  setTimeout(() => window.close(), 3000);
+                }).catch(() => {
+                  alert('Could not reach the server. It may already be stopped.');
+                });
+              }
+            }}
+            style={{ cursor: 'pointer' }}
+          >
+            <Power /> Shut Down
+          </div>
           <div className="nav-item" style={{ opacity: 0.4, pointerEvents: 'none', fontSize: '0.75rem' }}>
             <Info /> v1.0.0
           </div>
