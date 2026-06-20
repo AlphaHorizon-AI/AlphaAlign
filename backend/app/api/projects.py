@@ -97,7 +97,6 @@ async def create_project(data: ProjectCreate, session: AsyncSession = Depends(ge
     session.add(project)
     
     # Automatically inject the 10 fixed criteria
-    criteria = []
     for i, default in enumerate(DEFAULT_CRITERIA):
         criterion = Criterion(
             id=generate_uuid(),
@@ -112,13 +111,17 @@ async def create_project(data: ProjectCreate, session: AsyncSession = Depends(ge
             independent_score=default.get("independent_score", 3.0),
         )
         session.add(criterion)
-        criteria.append(criterion)
         
     await session.commit()
-    await session.refresh(project)
     
-    # Manually attach criteria to avoid lazy load issue in _to_response
-    project.criteria = criteria
+    # Reload with relationships to avoid lazy-loading in async context
+    result = await session.execute(
+        select(Project).options(
+            selectinload(Project.criteria),
+            selectinload(Project.respondents),
+        ).where(Project.id == project.id)
+    )
+    project = result.scalar_one()
     return _to_response(project)
 
 
