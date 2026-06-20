@@ -99,17 +99,21 @@ To ensure rigorous and unbiased evaluation, AlphaAlign uses 10 fixed criteria th
 
 AlphaAlign requires **Python 3.10+** and **Node.js v18+**.
 
-We provide zero-friction installation scripts for both Windows and macOS/Linux.
+We provide zero-friction installation scripts for both Windows and macOS/Linux. 
+
+**⏬ Direct Downloads:** You can download the installation scripts directly from the [Latest Release](https://github.com/AlphaHorizon-AI/AlphaAlign/releases/latest):
+- [Windows Installer (install.bat)](https://github.com/AlphaHorizon-AI/AlphaAlign/releases/latest/download/install.bat)
+- [macOS/Linux Installer (install.sh)](https://github.com/AlphaHorizon-AI/AlphaAlign/releases/latest/download/install.sh)
 
 ### Windows
-1. Clone or download this repository.
-2. Double-click **`install.bat`** to install all dependencies.
+1. Clone the repository or download the source code zip from the release.
+2. Ensure **`install.bat`** is in the root directory and double-click it to install all dependencies.
 3. Once installed, double-click **`start.bat`**. This will launch both the backend and frontend servers automatically.
 4. Your browser will open to `http://localhost:5173`.
 
 ### macOS / Linux
-1. Clone or download this repository.
-2. Open a terminal and run the install script:
+1. Clone the repository or download the source code zip from the release.
+2. Ensure **`install.sh`** is in the root directory. Open a terminal and run the install script:
    ```bash
    chmod +x install.sh start.sh
    ./install.sh
