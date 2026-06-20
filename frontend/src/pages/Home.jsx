@@ -6,6 +6,7 @@ import api from '../api/client';
 export default function Home() {
   const [projects, setProjects] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ name: '', company_name: '', industry: '', owner: '', time_horizon: '', ai_ambition: '', primary_vendor: '', description: '' });
   const navigate = useNavigate();
 
@@ -35,11 +36,19 @@ export default function Home() {
   };
 
   const createProject = async () => {
-    if (!form.name || !form.company_name) return;
+    if (!form.name || !form.company_name || submitting) return;
+    setSubmitting(true);
     try {
       const { data } = await api.post('/projects', form);
+      setShowModal(false);
+      setForm({ name: '', company_name: '', industry: '', owner: '', time_horizon: '', ai_ambition: '', primary_vendor: '', description: '' });
       navigate(`/project/${data.id}`);
-    } catch(e) { console.error(e); }
+    } catch(e) {
+      console.error(e);
+      alert('Failed to create assessment. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const deleteProject = async (e, id) => {
@@ -173,8 +182,8 @@ export default function Home() {
             </div>
             <div className="modal-actions">
               <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-              <button className="btn btn-primary" onClick={createProject} disabled={!form.name || !form.company_name}>
-                <Sparkles size={16} /> Create Assessment
+              <button className="btn btn-primary" onClick={createProject} disabled={!form.name || !form.company_name || submitting}>
+                {submitting ? <><div className="loading-spinner" style={{ width: 16, height: 16, borderWidth: 2 }} /> Creating...</> : <><Sparkles size={16} /> Create Assessment</>}
               </button>
             </div>
           </div>
