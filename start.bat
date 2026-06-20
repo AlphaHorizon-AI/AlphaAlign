@@ -14,6 +14,12 @@ timeout /t 3 /nobreak >nul
 echo Starting Frontend Development Server (port 5173)...
 start "AlphaAlign Frontend" cmd /k "cd frontend & npm run dev"
 
+:: Wait for frontend to initialize
+timeout /t 3 /nobreak >nul
+
+:: Open browser
+start http://localhost:5173
+
 echo.
 echo Both servers have been started in new windows.
-echo Please go to http://localhost:5173 in your browser.
+echo Browser opened to http://localhost:5173

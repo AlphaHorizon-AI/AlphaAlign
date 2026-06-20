@@ -20,9 +20,18 @@ npm run dev &
 FRONTEND_PID=$!
 cd ..
 
+sleep 3
+
+# Open browser
+if command -v xdg-open &> /dev/null; then
+    xdg-open http://localhost:5173
+elif command -v open &> /dev/null; then
+    open http://localhost:5173
+fi
+
 echo ""
 echo "Both servers are running in the background."
-echo "Please go to http://localhost:5173 in your browser."
+echo "Browser opened to http://localhost:5173"
 echo "Press Ctrl+C to stop both servers."
 
 # Wait for user interrupt to kill both processes
