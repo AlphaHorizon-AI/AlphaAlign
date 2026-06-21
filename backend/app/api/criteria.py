@@ -81,6 +81,60 @@ DEFAULT_CRITERIA = [
 ]
 
 
+# ── Flex Mode: Additional Business/Strategy Criteria ──
+
+FLEX_CRITERIA = [
+    {
+        "name": "Executive Sponsorship Strength",
+        "description": "How strong and unified is C-level sponsorship for the AI initiative, and how much executive capital is being invested?",
+        "category": "Strategic",
+        "vendor_score": 4.0, "hybrid_score": 3.0, "independent_score": 2.0,
+    },
+    {
+        "name": "Organizational Change Readiness",
+        "description": "How prepared is the workforce for AI-driven transformation in terms of culture, training, and adoption willingness?",
+        "category": "Organizational",
+        "vendor_score": 4.0, "hybrid_score": 3.0, "independent_score": 2.0,
+    },
+    {
+        "name": "Competitive Differentiation Potential",
+        "description": "To what extent can AI create a defensible competitive moat or unique market positioning for the organization?",
+        "category": "Strategic",
+        "vendor_score": 2.0, "hybrid_score": 3.0, "independent_score": 5.0,
+    },
+    {
+        "name": "Multi-Geography & Data Sovereignty",
+        "description": "Does the organization operate across jurisdictions with conflicting data residency, sovereignty, or AI governance laws?",
+        "category": "Governance",
+        "vendor_score": 2.0, "hybrid_score": 4.0, "independent_score": 5.0,
+    },
+    {
+        "name": "Revenue Model AI Dependency",
+        "description": "How directly does the AI capability feed into the company's revenue model or customer-facing products?",
+        "category": "Financial",
+        "vendor_score": 3.0, "hybrid_score": 4.0, "independent_score": 4.0,
+    },
+    {
+        "name": "Partnership & Ecosystem Strategy",
+        "description": "How important is it to maintain flexibility across multiple vendor partnerships and technology alliances?",
+        "category": "Strategic",
+        "vendor_score": 1.0, "hybrid_score": 5.0, "independent_score": 3.0,
+    },
+    {
+        "name": "Scalability & Growth Trajectory",
+        "description": "How rapidly must the AI infrastructure scale to support projected business growth over the next 2-5 years?",
+        "category": "Operational",
+        "vendor_score": 5.0, "hybrid_score": 4.0, "independent_score": 2.0,
+    },
+    {
+        "name": "Board & Investor AI Governance Expectations",
+        "description": "How much pressure exists from the board or investors to demonstrate responsible, transparent, and auditable AI governance?",
+        "category": "Governance",
+        "vendor_score": 3.0, "hybrid_score": 3.0, "independent_score": 5.0,
+    },
+]
+
+
 # ── Pydantic Schemas ──
 
 class CriterionCreate(BaseModel):
@@ -139,9 +193,45 @@ async def list_criteria(project_id: str, session: AsyncSession = Depends(get_ses
     return result.scalars().all()
 
 
+@router.get("/projects/{project_id}/criteria/flex-library")
+async def get_flex_library(project_id: str, session: AsyncSession = Depends(get_session)):
+    """Return the additional flex criteria available for this project."""
+    # Get existing criteria names to mark which are already added
+    result = await session.execute(
+        select(Criterion.name).where(Criterion.project_id == project_id)
+    )
+    existing_names = {row[0] for row in result.all()}
+    return [
+        {**c, "already_added": c["name"] in existing_names}
+        for c in FLEX_CRITERIA
+    ]
+
+
 @router.post("/projects/{project_id}/criteria", response_model=CriterionResponse, status_code=201)
 async def add_criterion(project_id: str, data: CriterionCreate, session: AsyncSession = Depends(get_session)):
-    raise HTTPException(status_code=403, detail="Criteria are fixed for this assessment type and cannot be added.")
+    # Count existing criteria
+    result = await session.execute(
+        select(Criterion).where(Criterion.project_id == project_id)
+    )
+    existing = result.scalars().all()
+    max_order = max((c.sort_order for c in existing), default=-1)
+
+    criterion = Criterion(
+        id=generate_uuid(),
+        project_id=project_id,
+        name=data.name,
+        description=data.description,
+        category=data.category,
+        sort_order=max_order + 1,
+        is_mandatory=False,
+        vendor_score=data.vendor_score,
+        hybrid_score=data.hybrid_score,
+        independent_score=data.independent_score,
+    )
+    session.add(criterion)
+    await session.commit()
+    await session.refresh(criterion)
+    return criterion
 
 @router.post("/projects/{project_id}/criteria/defaults", response_model=list[CriterionResponse], status_code=201)
 async def load_default_criteria(project_id: str, session: AsyncSession = Depends(get_session)):
@@ -205,7 +295,16 @@ async def update_criterion(
 
 @router.delete("/projects/{project_id}/criteria/{criterion_id}", status_code=204)
 async def delete_criterion(project_id: str, criterion_id: str, session: AsyncSession = Depends(get_session)):
-    raise HTTPException(status_code=403, detail="Criteria are fixed for this assessment type and cannot be deleted.")
+    result = await session.execute(
+        select(Criterion).where(Criterion.id == criterion_id, Criterion.project_id == project_id)
+    )
+    criterion = result.scalar_one_or_none()
+    if not criterion:
+        raise HTTPException(status_code=404, detail="Criterion not found")
+    if criterion.is_mandatory:
+        raise HTTPException(status_code=403, detail="Core criteria cannot be removed. Only flex criteria can be deleted.")
+    await session.delete(criterion)
+    await session.commit()
 
 
 @router.post("/projects/{project_id}/criteria/reorder", status_code=200)
